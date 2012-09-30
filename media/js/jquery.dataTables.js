@@ -6441,6 +6441,7 @@
 			_fnMap( oSettings, oInit, "aLengthMenu" );
 			_fnMap( oSettings, oInit, "sPaginationType" );
 			_fnMap( oSettings, oInit, "sAjaxSource" );
+			_fnMap( oSettings, oInit, "bAjaxCache" );
 			_fnMap( oSettings, oInit, "sAjaxDataProp" );
 			_fnMap( oSettings, oInit, "iCookieDuration" );
 			_fnMap( oSettings, oInit, "sCookiePrefix" );
@@ -8679,7 +8680,7 @@
 					fnCallback( json );
 				},
 				"dataType": "json",
-				"cache": false,
+				"cache": oSettings.bAjaxCache,
 				"type": oSettings.sServerMethod,
 				"error": function (xhr, error, thrown) {
 					if ( error == "parsererror" ) {
@@ -9700,7 +9701,24 @@
 		 *      } );
 		 *    } );
 		 */
-		"sServerMethod": "GET"
+		"sServerMethod": "GET",
+		
+		/**
+		 * Set whether to allow the Ajax sourced data to be cached client-side
+		 *  @type boolean
+		 *  @default false
+		 *  @dtopt Options
+		 *  @dtopt Server-side
+		 * 
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "sAjaxSource": "static.json",
+		 *        "bAjaxCache": "true"
+		 *      } );
+		 *    } );
+		 */
+		"bAjaxCache": false
 	};
 	
 	

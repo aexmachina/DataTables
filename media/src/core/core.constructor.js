@@ -112,6 +112,7 @@ _fnMap( oSettings, oInit, "aaSortingFixed" );
 _fnMap( oSettings, oInit, "aLengthMenu" );
 _fnMap( oSettings, oInit, "sPaginationType" );
 _fnMap( oSettings, oInit, "sAjaxSource" );
+_fnMap( oSettings, oInit, "bAjaxCache" );
 _fnMap( oSettings, oInit, "sAjaxDataProp" );
 _fnMap( oSettings, oInit, "iCookieDuration" );
 _fnMap( oSettings, oInit, "sCookiePrefix" );

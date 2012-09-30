@@ -926,7 +926,7 @@ DataTable.defaults = {
 				fnCallback( json );
 			},
 			"dataType": "json",
-			"cache": false,
+			"cache": oSettings.bAjaxCache,
 			"type": oSettings.sServerMethod,
 			"error": function (xhr, error, thrown) {
 				if ( error == "parsererror" ) {
@@ -1948,5 +1948,23 @@ DataTable.defaults = {
 	 *    } );
 	 */
 	"sServerMethod": "GET"
+
+	/**
+	 * Set whether to allow the Ajax sourced data to be cached client-side
+	 *  @type boolean
+	 *  @default false
+	 *  @dtopt Options
+	 *  @dtopt Server-side
+	 * 
+	 *  @example
+	 *    $(document).ready( function() {
+	 *      $('#example').dataTable( {
+	 *        "sAjaxSource": "static.json",
+	 *        "bAjaxCache": "true"
+	 *      } );
+	 *    } );
+	 */
+	"bAjaxCache": false,
+
 };
 
