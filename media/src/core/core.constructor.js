@@ -2,6 +2,7 @@ var i=0, iLen, j, jLen, k, kLen;
 var sId = this.getAttribute( 'id' );
 var bInitHandedOff = false;
 var bUsePassedData = false;
+var oInitEmpty = oInit === undefined ? true : false;
 
 
 /* Sanity check */
@@ -12,13 +13,24 @@ if ( this.nodeName.toLowerCase() != 'table' )
 	return;
 }
 
+/* Convert the camel-case defaults to Hungarian */
+_fnCamelToHungarian( DataTable.defaults, DataTable.defaults, true );
+_fnCamelToHungarian( DataTable.defaults.column, DataTable.defaults.column, true );
+
+/* Setting up the initialisation object */
+if ( !oInit )
+{
+	oInit = {};
+}
+_fnCamelToHungarian( DataTable.defaults, oInit );
+
 /* Check to see if we are re-initialising a table */
 for ( i=0, iLen=DataTable.settings.length ; i<iLen ; i++ )
 {
 	/* Base check on table node */
 	if ( DataTable.settings[i].nTable == this )
 	{
-		if ( oInit === undefined || oInit.bRetrieve )
+		if ( oInitEmpty || oInit.bRetrieve )
 		{
 			return DataTable.settings[i].oInstance;
 		}
@@ -70,12 +82,6 @@ DataTable.settings.push( oSettings );
 // to the settings array, so we can self reference the table instance if more than one
 oSettings.oInstance = (_that.length===1) ? _that : $(this).dataTable();
 
-/* Setting up the initialisation object */
-if ( !oInit )
-{
-	oInit = {};
-}
-
 // Backwards compatibility, before we apply all the defaults
 if ( oInit.oLanguage )
 {
@@ -103,7 +109,6 @@ _fnMap( oSettings.oScroll, oInit, "bScrollInfinite", "bInfinite" );
 _fnMap( oSettings.oScroll, oInit, "iScrollLoadGap", "iLoadGap" );
 _fnMap( oSettings.oScroll, oInit, "bScrollAutoCss", "bAutoCss" );
 _fnMap( oSettings, oInit, "asStripeClasses" );
-_fnMap( oSettings, oInit, "asStripClasses", "asStripeClasses" ); // legacy
 _fnMap( oSettings, oInit, "fnServerData" );
 _fnMap( oSettings, oInit, "fnFormatNumber" );
 _fnMap( oSettings, oInit, "sServerMethod" );
@@ -114,8 +119,8 @@ _fnMap( oSettings, oInit, "sPaginationType" );
 _fnMap( oSettings, oInit, "sAjaxSource" );
 _fnMap( oSettings, oInit, "bAjaxCache" );
 _fnMap( oSettings, oInit, "sAjaxDataProp" );
-_fnMap( oSettings, oInit, "iCookieDuration" );
-_fnMap( oSettings, oInit, "sCookiePrefix" );
+_fnMap( oSettings, oInit, "iCookieDuration", "iStateDuration" ); // backwards compat
+_fnMap( oSettings, oInit, "iStateDuration" );
 _fnMap( oSettings, oInit, "sDom" );
 _fnMap( oSettings, oInit, "bSortCellsTop" );
 _fnMap( oSettings, oInit, "iTabIndex" );
@@ -123,9 +128,8 @@ _fnMap( oSettings, oInit, "oSearch", "oPreviousSearch" );
 _fnMap( oSettings, oInit, "aoSearchCols", "aoPreSearchCols" );
 _fnMap( oSettings, oInit, "iDisplayLength", "_iDisplayLength" );
 _fnMap( oSettings, oInit, "bJQueryUI", "bJUI" );
-_fnMap( oSettings, oInit, "fnCookieCallback" );
-_fnMap( oSettings, oInit, "fnStateLoad" );
-_fnMap( oSettings, oInit, "fnStateSave" );
+_fnMap( oSettings, oInit, "fnStateLoadCallback" );
+_fnMap( oSettings, oInit, "fnStateSaveCallback" );
 _fnMap( oSettings.oLanguage, oInit, "fnInfoCallback" );
 
 /* Callback functions which are array driven */
@@ -186,7 +190,7 @@ if ( oSettings.iInitDisplayStart === undefined )
 	oSettings._iDisplayStart = oInit.iDisplayStart;
 }
 
-/* Must be done after everything which can be overridden by a cookie! */
+/* Must be done after everything which can be overridden by the state saving! */
 if ( oInit.bStateSave )
 {
 	oSettings.oFeatures.bStateSave = true;
@@ -217,6 +221,7 @@ if ( oInit.oLanguage.sUrl !== "" )
 	oSettings.oLanguage.sUrl = oInit.oLanguage.sUrl;
 	$.getJSON( oSettings.oLanguage.sUrl, null, function( json ) {
 		_fnLanguageCompat( json );
+		_fnCamelToHungarian( DataTable.defaults.oLanguage, json );
 		$.extend( true, oSettings.oLanguage, oInit.oLanguage, json );
 		_fnInitialise( oSettings );
 	} );
@@ -240,27 +245,12 @@ if ( oInit.asStripeClasses === null )
 }
 
 /* Remove row stripe classes if they are already on the table row */
-iLen=oSettings.asStripeClasses.length;
-oSettings.asDestroyStripes = [];
-if (iLen)
-{
-	var bStripeRemove = false;
-	var anRows = $(this).children('tbody').children('tr:lt(' + iLen + ')');
-	for ( i=0 ; i<iLen ; i++ )
-	{
-		if ( anRows.hasClass( oSettings.asStripeClasses[i] ) )
-		{
-			bStripeRemove = true;
-			
-			/* Store the classes which we are about to remove so they can be re-added on destroy */
-			oSettings.asDestroyStripes.push( oSettings.asStripeClasses[i] );
-		}
-	}
-	
-	if ( bStripeRemove )
-	{
-		anRows.removeClass( oSettings.asStripeClasses.join(' ') );
-	}
+var stripeClasses = oSettings.asStripeClasses;
+if ( $.inArray( true, $.map( stripeClasses, function(el, i) {
+	return $('tbody tr:eq(0)', this).hasClass(el);
+} ) ) !== -1 ) {
+	$('tbody tr', this).removeClass( stripeClasses.join(' ') );
+	oSettings.asDestroyStripes = stripeClasses.slice();
 }
 
 /*
@@ -408,10 +398,13 @@ if ( bUsePassedData )
 		_fnAddData( oSettings, oInit.aaData[ i ] );
 	}
 }
-else
+else if ( oSettings.bDeferLoading || oSettings.sAjaxSource === null )
 {
-	/* Grab the data from the page */
-	_fnGatherData( oSettings );
+	/* Grab the data from the page - only do this when deferred loading or no Ajax
+	 * source since there is no point in reading the DOM data if we are then going
+	 * to replace it with Ajax data
+	 */
+	_fnAddTr( oSettings, $(oSettings.nTBody).children('tr') );
 }
 
 /* Copy the data index array */

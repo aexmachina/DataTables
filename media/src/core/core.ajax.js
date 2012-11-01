@@ -1,5 +1,4 @@
 
-
 /**
  * Update the table using an Ajax call
  *  @param {object} oSettings dataTables settings object
@@ -22,10 +21,7 @@ function _fnAjaxUpdate( oSettings )
 			}, oSettings );
 		return false;
 	}
-	else
-	{
-		return true;
-	}
+	return true;
 }
 
 
@@ -133,14 +129,10 @@ function _fnAjaxUpdateDraw ( oSettings, json )
 		{
 			return;
 		}
-		else
-		{
-			oSettings.iDraw = json.sEcho * 1;
-		}
+		oSettings.iDraw = json.sEcho * 1;
 	}
 	
-	if ( !oSettings.oScroll.bInfinite ||
-		   (oSettings.oScroll.bInfinite && (oSettings.bSorted || oSettings.bFiltered)) )
+	if ( !oSettings.oScroll.bInfinite || oSettings.bSorted || oSettings.bFiltered )
 	{
 		_fnClearTable( oSettings );
 	}
@@ -150,21 +142,7 @@ function _fnAjaxUpdateDraw ( oSettings, json )
 	var aData = _fnGetObjectDataFn( oSettings.sAjaxDataProp )( json );
 	for ( var i=0, iLen=aData.length ; i<iLen ; i++ )
 	{
-		if ( bReOrder )
-		{
-			/* If we need to re-order, then create a new array with the correct order and add it */
-			var aDataSorted = [];
-			for ( var j=0, jLen=oSettings.aoColumns.length ; j<jLen ; j++ )
-			{
-				aDataSorted.push( aData[i][ aiIndex[j] ] );
-			}
-			_fnAddData( oSettings, aDataSorted );
-		}
-		else
-		{
-			/* No re-order required, sever got it "right" - just straight add */
-			_fnAddData( oSettings, aData[i] );
-		}
+		_fnAddData( oSettings, aData[i] );
 	}
 	oSettings.aiDisplay = oSettings.aiDisplayMaster.slice();
 	

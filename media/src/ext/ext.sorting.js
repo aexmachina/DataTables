@@ -1,12 +1,16 @@
-
 $.extend( DataTable.ext.oSort, {
 	/*
 	 * text sorting
 	 */
 	"string-pre": function ( a )
 	{
-		if ( typeof a != 'string' ) {
-			a = (a !== null && a.toString) ? a.toString() : '';
+		if ( typeof a != 'string' )
+		{
+			if (a === null || a === undefined || !a.toString)
+			{
+				return '';
+			}
+			a = a.toString();
 		}
 		return a.toLowerCase();
 	},
@@ -52,6 +56,6 @@ $.extend( DataTable.ext.oSort, {
 	 */
 	"numeric-pre": function ( a )
 	{
-		return (a=="-" || a==="") ? 0 : a*1;
-	},
+		return (a=="-" || a==="") ? -Infinity : a*1;
+	}
 } );
