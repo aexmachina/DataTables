@@ -989,8 +989,8 @@ DataTable.defaults = {
 				callback( json );
 			},
 			"dataType": "json",
-			"cache": oSettings.bAjaxCache,
-			"type": oSettings.sServerMethod,
+			"cache": settings.bAjaxCache,
+			"type": settings.sServerMethod,
 			"error": function (xhr, error, thrown) {
 				if ( error == "parsererror" ) {
 					settings.oApi._fnLog( settings, 0, "DataTables warning: JSON data from "+
